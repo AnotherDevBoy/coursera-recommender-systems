@@ -77,21 +77,24 @@ public class SimpleUserUserItemScorer extends AbstractItemScorer {
                     long neighbourId = neighbourSortedByCosine.getKey();
                     double cosine = neighbourSortedByCosine.getValue();
 
-                    //System.out.printf("Size: %d - Item: %d - Neighbour ID: %d - Cosine: %f\n", this.neighborhoodSize, itemId, neighbourId, cosine);
-                    UserRatingData neighbourRatingData = allUserRatings.get(neighbourId);
+                    if (cosine > 0) {
+                        UserRatingData neighbourRatingData = allUserRatings.get(neighbourId);
 
-                    double neighbourAverageRating = neighbourRatingData.getAverageRating();
-                    double neighbourRatingForItem =neighbourRatingData.getUserRatings().get(itemId);
+                        double neighbourAverageRating = neighbourRatingData.getAverageRating();
+                        double neighbourRatingForItem =neighbourRatingData.getUserRatings().get(itemId);
 
-                    neighboursInfluence += cosine*(neighbourRatingForItem - neighbourAverageRating);
-                    sumOfAllCosines += neighbourSortedByCosine.getValue();
-                    ++count;
+                        neighboursInfluence += cosine*(neighbourRatingForItem - neighbourAverageRating);
+                        sumOfAllCosines += neighbourSortedByCosine.getValue();
+                        ++count;
+                    }
                 }
             }
             //System.out.println("**************End**************");
 
-            double prediction = userRatingData.getAverageRating() + (neighboursInfluence / sumOfAllCosines);
-            results.add(Results.create(itemId, prediction));
+            if (count == this.neighborhoodSize) {
+                double prediction = userRatingData.getAverageRating() + (neighboursInfluence / sumOfAllCosines);
+                results.add(Results.create(itemId, prediction));
+            }
         }
 
         return Results.newResultMap(results);
