@@ -1,6 +1,5 @@
 package org.lenskit.mooc.ii;
 
-import it.unimi.dsi.fastutil.doubles.DoubleCollection;
 import it.unimi.dsi.fastutil.longs.Long2DoubleMap;
 import it.unimi.dsi.fastutil.longs.Long2DoubleOpenHashMap;
 import org.lenskit.api.Result;
@@ -10,15 +9,12 @@ import org.lenskit.data.dao.DataAccessObject;
 import org.lenskit.data.entities.CommonAttributes;
 import org.lenskit.data.ratings.Rating;
 import org.lenskit.results.Results;
-import org.lenskit.util.ScoredIdAccumulator;
-import org.lenskit.util.TopNScoredIdAccumulator;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nonnull;
 import javax.inject.Inject;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -28,6 +24,7 @@ public class SimpleItemItemScorer extends AbstractItemScorer {
     private final SimpleItemItemModel model;
     private final DataAccessObject dao;
     private final int neighborhoodSize;
+    private static final Logger logger = LoggerFactory.getLogger(SimpleItemItemScorer.class);
 
     @Inject
     public SimpleItemItemScorer(SimpleItemItemModel m, DataAccessObject dao) {
@@ -56,24 +53,40 @@ public class SimpleItemItemScorer extends AbstractItemScorer {
             double denominator = 0.0;
 
             Long2DoubleMap similaritiesWithNeighbours = this.model.getNeighbors(candidateItem);
-
-            // Take the top 20 most similar neighbours
-            DoubleCollection similarities = similaritiesWithNeighbours.values();
+            Long2DoubleMap similaritiesWithNeighboursThatUserHasRated = new Long2DoubleOpenHashMap();
 
             for (long neighbour: similaritiesWithNeighbours.keySet()) {
-                double similarity = similaritiesWithNeighbours.get(neighbour);
-
-                if (similarities.contains(similarity)) {
-                    double userRating = ratings.get(neighbour);
-                    double otherIteamMeanRating = itemMeans.get(neighbour);
-                    numerator += (userRating - otherIteamMeanRating) * similarity;
-                    denominator += similarity;
+                if (ratings.containsKey(neighbour)) {
+                    similaritiesWithNeighboursThatUserHasRated.put(neighbour, similaritiesWithNeighbours.get(neighbour));
                 }
             }
 
-            double score = candateItemMeanRating + (numerator/denominator);
+            // Take the top 20 most similar neighbours
+            List<Double> top20ItemSimilarities = similaritiesWithNeighboursThatUserHasRated
+                .values()
+                .stream()
+                .sorted(Comparator.reverseOrder())
+                .limit(this.neighborhoodSize)
+                .collect(Collectors.toList());
 
-            results.add(Results.create(candidateItem, score));
+            for (long neighbour: similaritiesWithNeighboursThatUserHasRated.keySet()) {
+                double similarity = similaritiesWithNeighboursThatUserHasRated.get(neighbour);
+
+                if (top20ItemSimilarities.contains(similarity)) {
+                    double userRating = ratings.get(neighbour);
+                    double otherIteamMeanRating = itemMeans.get(neighbour);
+
+                    //logger.info(String.format("User Rating: %f, Similar Item Mean Rating: %f. Similarity: %f. Candidate Item ID: %d. Similar Item ID: %d", userRating, otherIteamMeanRating, similarity, candidateItem, neighbour));
+                    numerator += (userRating - otherIteamMeanRating) * similarity;
+                    denominator += Math.abs(similarity);
+                }
+            }
+
+            if (denominator > 0.0) {
+                double score = candateItemMeanRating + (numerator/denominator);
+                //logger.info(String.format("Candidate Item: %d. Numerator: %f. Denominator: %f. MeanRating: %f. Score: %f", candidateItem, numerator, denominator, candateItemMeanRating, score));
+                results.add(Results.create(candidateItem, score));
+            }
         }
 
         return Results.newResultMap(results);
