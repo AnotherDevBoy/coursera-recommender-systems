@@ -72,7 +72,12 @@ task evaluate(type: TrainTest, group: 'evaluate') {
 
     // configure our algorithms
     algorithm 'cfg/baselines.groovy'
-    // TODO Add user-user, item-item and lucene configs
+
+    algorithm 'cfg/user-user.groovy'
+
+    algorithm 'cfg/item-item.groovy'
+
+    algorithm 'cfg/lucene.groovy'
 
     // and some evaluation tasks and metrics
     predict {

@@ -19,9 +19,7 @@ import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * Metric that measures how long a TopN list actually is.
@@ -43,18 +41,56 @@ public class TagEntropyMetric extends TopNMetric<TagEntropyMetric.Context> {
             return MetricResult.empty();
             // no results for this user.
         }
-        int n = recommendations.size();
+
+        int recommendationListSize = recommendations.size();
 
         // get tag data from the context so we can use it
         DataAccessObject dao = context.getDAO();
-        double entropy = 0;
+        double entropy = 0.0;
 
-        // TODO Compute the entropy of the movie list
-        // You can get a movie's tags with:
-        // dao.query(TagData.ITEM_TAG_TYPE).withAttribute(TagData.ITEM_ID, res.getId()).get();
-        // Each entity's tag can be retrieved with 'itemTag.get(TagData.TAG)'
+        Map<String, Double> tagProbabilities = new HashMap<>();
 
+        for (Result recommendation : recommendations) {
+            long movie = recommendation.getId();
+
+            List<Entity> itemTags = dao.query(TagData.ITEM_TAG_TYPE)
+                .withAttribute(TagData.ITEM_ID, movie)
+                .get();
+
+            Map<String, Integer> tagOccurrences = new HashMap();
+
+            int totalTagOccurrences = 0;
+
+            for (Entity itag: itemTags) {
+                String tagString = itag.get(TagData.TAG);
+
+                int tagCount = tagOccurrences.containsKey(tagString) ? tagOccurrences.get(tagString) : 0;
+                tagOccurrences.put(tagString, tagCount + 1);
+
+                ++totalTagOccurrences;
+            }
+
+            for (String candidateTag : tagOccurrences.keySet()) {
+                double candidateTagProbability = 1.0 * tagOccurrences.get(candidateTag) / totalTagOccurrences / recommendationListSize;
+
+                double newCandidateTagProbability = tagProbabilities.containsKey(candidateTag) ?
+                        tagProbabilities.get(candidateTag) + candidateTagProbability :
+                        candidateTagProbability;
+
+                tagProbabilities.put(candidateTag, newCandidateTagProbability);
+            }
+        }
+
+        for (double probability: tagProbabilities.values()) {
+            entropy += -1.0 * probability * logInBase(probability, 2);
+        }
+
+        context.addUser(entropy);
         return new TagEntropyResult(entropy);
+    }
+
+    private static double logInBase(double number, int base) {
+        return Math.log(number) / Math.log(base);
     }
 
     @Nullable
