@@ -22,7 +22,10 @@ import javax.annotation.Nullable;
 import java.util.*;
 
 /**
- * Metric that measures how long a TopN list actually is.
+ * Top N metric that will measure the diversity of recommendations. There are many ways to measure diversity, but for this assignment we will use the entropy of the tags of the items in a top-10 recommendation list. 
+ * Entropy is, roughly, a measurement of how complicated it is to say which one of several possibilities has been picked. 
+ * If there are many different tags represented among the movies, they will have high entropy; if there are very few tags, entropy will below. 
+ * We will use high entropy as an indication that the set of movies is diverse.1 
  */
 public class TagEntropyMetric extends TopNMetric<TagEntropyMetric.Context> {
     private static final Logger logger = LoggerFactory.getLogger(TagEntropyMetric.class);

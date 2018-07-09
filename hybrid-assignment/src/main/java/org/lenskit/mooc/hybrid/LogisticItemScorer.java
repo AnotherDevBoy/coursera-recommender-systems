@@ -40,7 +40,6 @@ public class LogisticItemScorer extends AbstractItemScorer {
     public ResultMap scoreWithDetails(long user, @Nonnull Collection<Long> items) {
         List<Result> results = new ArrayList<>();
 
-        // TODO Implement item scorer
         List<ItemScorer> scorers = this.recommenders.getItemScorers();
         double[] x = new double[scorers.size() + 2];
 
