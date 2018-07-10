@@ -1,32 +1,33 @@
 import pandas as pd
 
-headers = pd.read_csv("cbf.csv", nrows=1)
+headers = pd.read_csv('cbf.csv', nrows=1)
 
 users = headers.columns[1:] 
 
-predictions = pd.read_csv("cbf.csv")
+predictions = pd.read_csv('cbf.csv')
 
+ratings = pd.read_csv('ratings.csv')
 
+user_id = '64'
+
+predictions_for_user = predictions[[user_id]]
+predictions_for_user = predictions_for_user.sort_values(by=[user_id], ascending=False)
+top_n = predictions_for_user.head()
+
+mrr = 0.0
 for user_id in users:
-    predictions_for_user = predictions[[user_id]]
-    predictions_for_user = predictions_for_user.sort_values(by=[user_id], ascending=False)
-    top_n = predictions_for_user.head()
+    user_ratings = ratings[user_id].dropna()
 
-    print top_n
+    rank = 1.0
 
-    
+    for recommendation in top_n.iterrows():
+        recommended_item =  recommendation[0]
 
-'''
-predictions_by_user = {}
+        if recommended_item in user_ratings:
+            mrr += 1/rank
+            print 'User', user_id, 'rated item', recommended_item, 'rank', rank
+        
+        rank += 1.0
 
-for index, prediction in predictions.iterrows():
-    item_id = prediction['Item']
-
-    for user in users:
-        if not user in predictions_by_user:
-            predictions_by_user[user] = []
-            
-        predictions_by_user[user].append({ 'item': item_id, 'value': prediction[user]})
-
-print predictions_by_user['64']
-'''
+number_of_users = 1.0 * len(users)
+print 'MRR', mrr/number_of_users
