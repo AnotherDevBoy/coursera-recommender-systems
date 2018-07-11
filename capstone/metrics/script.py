@@ -11,16 +11,6 @@ def generate_top_n_for_all_users():
         predictions_for_user = predictions_for_user.sort_values(by=[user_id], ascending=False)
         top_n_by_user[user_id] = predictions_for_user
 
-def get_ratings(user_id):
-    return ratings[['item', user_id]]
-
-def get_top_n(user_id, n):
-    return top_n_by_user[user_id].head(n=n)
-
-def get_relevant_items_for_user(user_id):
-    user_ratings = get_ratings(user_id)
-    return user_ratings[user_ratings[user_id] > 3.0]
-
 def read_items_from_file():
     items_df = pd.read_csv('items.csv')
     items_df = items_df[['Item', 'Availability', 'Price', 'LeafCat', 'FullCat']]
@@ -28,6 +18,20 @@ def read_items_from_file():
     for item_r in items_df.iterrows():
         item = { 'id': item_r[1]['Item'], 'Availability': item_r[1]['Availability'], 'Price': item_r[1]['Price'] }
         items.append(item)
+
+
+def get_ratings(user_id):
+    return ratings[['item', user_id]].dropna()
+
+def get_predictions(user_id):
+    return predictions[['Item', user_id]].dropna()
+
+def get_top_n(user_id, n):
+    return top_n_by_user[user_id].head(n=n)
+
+def get_relevant_items_for_user(user_id):
+    user_ratings = get_ratings(user_id)
+    return user_ratings[user_ratings[user_id] > 3.0]
 
 def mrr():
     mrr = 0.0
@@ -39,9 +43,7 @@ def mrr():
         rank = 1.0
 
         for recommendation in top_n.iterrows():
-            recommended_item = recommendation[1]['Item']
-
-            if recommended_item in list(user_relevant_items['item']):
+            if recommendation[1]['Item'] in list(user_relevant_items['item']):
                 mrr += 1.0/rank
             
             rank += 1.0
@@ -50,27 +52,53 @@ def mrr():
 
     return  mrr/number_of_users
 
-def rmse():
+def rmse_top_n():
     sum_squared_error = 0.0
     total_ratings = 0
 
     for user_id in users:
-        user_ratings = ratings[user_id].dropna()
-        # TODO: Review after Top_N change
+        user_ratings = get_ratings(user_id)
         top_n = get_top_n(user_id, 5)
 
-        recommended_relevant_items = list(set(user_ratings.index) & set(top_n['Item']))
+        recommended_and_rated_items = list(set(user_ratings['item']) & set(top_n['Item']))
 
-        filtered_top_n_df = top_n.filter(items=recommended_relevant_items, axis=0)
-        filtered_user_ratings_df = user_ratings.filter(items=recommended_relevant_items, axis=0)
+        if recommended_and_rated_items:
+            user_ratings_df = user_ratings[user_ratings['item'].isin(recommended_and_rated_items)]
+            top_n_df = top_n[top_n['Item'].isin(recommended_and_rated_items)]
 
-        filtered_top_n_values = list(map(float, filtered_top_n_df[user_id]))
-        filtered_user_ratings_values = list(map(float, filtered_user_ratings_df))
+            filtered_user_ratings_values = list(map(float, user_ratings_df[user_id]))
+            filtered_top_n_values = list(map(float, top_n_df[user_id]))
 
-        error = np.subtract(filtered_top_n_values, filtered_user_ratings_values)
-        squared_error = np.power(error, 2)
-        sum_squared_error += np.sum(squared_error)
-        total_ratings += len(user_ratings)
+            error = np.subtract(filtered_user_ratings_values, filtered_top_n_values)
+
+            squared_error = np.power(error, 2)
+            sum_squared_error += np.sum(squared_error)
+            total_ratings += len(recommended_and_rated_items)
+
+    return sqrt(sum_squared_error / total_ratings)
+
+def rmse_predict():
+    sum_squared_error = 0.0
+    total_ratings = 0
+
+    for user_id in users:
+        user_ratings = get_ratings(user_id)
+        user_predictions = get_predictions(user_id)
+
+        predicted_and_rated_items = list(set(user_ratings['item']) & set(user_predictions['Item']))
+
+        if predicted_and_rated_items:
+            user_ratings_df = user_ratings[user_ratings['item'].isin(predicted_and_rated_items)]
+            user_predictions_df = user_predictions[user_predictions['Item'].isin(predicted_and_rated_items)]
+
+            filtered_user_ratings_values = list(map(float, user_ratings_df[user_id]))
+            filtered_user_predictions_values = list(map(float, user_predictions_df[user_id]))
+
+            error = np.subtract(filtered_user_ratings_values, filtered_user_predictions_values)
+
+            squared_error = np.power(error, 2)
+            sum_squared_error += np.sum(squared_error)
+            total_ratings += len(predicted_and_rated_items)
 
     return sqrt(sum_squared_error / total_ratings)
 
@@ -80,6 +108,7 @@ def precision(recommended_items, user_relevant_items):
     return float(len(recommended_relevant_items)) / float(len(recommended_items))
 
 def mean_average_precision():
+    # TODO: Review after Top_N change
     user_id = '64'
 
     average_precision = 0.0
@@ -146,7 +175,7 @@ ratings = pd.read_csv('ratings.csv')
 items = []
 read_items_from_file()
 
-results = { 'MRR': [], 'RMSE': [], 'MAP': [], 'Coverage': [], 'Average Availability': [] }
+results = { 'MRR': [], 'RMSE.Predict': [], 'RMSE.TopN': [], 'MAP': [], 'Coverage': [], 'Average Availability': [] }
 
 algorithm = algorithms[-1]
 print algorithm
@@ -157,7 +186,8 @@ generate_top_n_for_all_users()
 average_availability_by_user()
 
 results['MRR'].append(mrr())
-# results['RMSE'].append(rmse())
+results['RMSE.Predict'].append(rmse_predict())
+results['RMSE.TopN'].append(rmse_top_n())
 # results['MAP'].append(mean_average_precision())
 results['Coverage'].append(coverage())
 results['Average Availability'].append(average_availability_by_user())
