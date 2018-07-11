@@ -2,22 +2,36 @@ import pandas as pd
 from math import sqrt
 import numpy as np   
 
-def top_n_for_user(predictions, user_id, n):
-    predictions_for_user = predictions[[user_id]]
-    predictions_for_user = predictions_for_user.sort_values(by=[user_id], ascending=False)
-    return predictions_for_user.head(n=n)
+def top_n_for_user(user_id, n):
+    return top_n_by_user[user_id].head(n=n)
 
-def mrr(ratings, predictions):
+def generate_top_n_for_all_users():
+    for user_id in users:
+        predictions_for_user = predictions[['Item', user_id]]
+        
+        predictions_for_user = predictions_for_user.sort_values(by=[user_id], ascending=False)
+        top_n_by_user[user_id] = predictions_for_user
+
+def read_items_from_file():
+    items_df = pd.read_csv('items.csv')
+    items_df = items_df[['Item', 'Availability', 'Price', 'LeafCat', 'FullCat']]
+
+    for item_r in items_df.iterrows():
+        item = { 'id': item_r[1]['Item'], 'Availability': item_r[1]['Availability'], 'Price': item_r[1]['Price'] }
+        items.append(item)
+
+def mrr():
     mrr = 0.0
 
     for user_id in users:
         user_ratings = ratings[user_id].dropna()
-        top_n = top_n_for_user(predictions, user_id, 5)
+
+        top_n = top_n_for_user(user_id, 5)
 
         rank = 1.0
 
         for recommendation in top_n.iterrows():
-            recommended_item =  recommendation[0]
+            recommended_item = recommendation[1]['Item']
 
             if recommended_item in user_ratings:
                 mrr += 1/rank
@@ -28,15 +42,16 @@ def mrr(ratings, predictions):
 
     return  mrr/number_of_users
 
-def rmse(ratings, predictions):
+def rmse():
     sum_squared_error = 0.0
     total_ratings = 0
 
     for user_id in users:
         user_ratings = ratings[user_id].dropna()
-        top_n = top_n_for_user(predictions, user_id, 5)
+        # TODO: Review after Top_N change
+        top_n = top_n_for_user(user_id, 5)
 
-        recommended_relevant_items = list(set(user_ratings.index) & set(top_n.index))
+        recommended_relevant_items = list(set(user_ratings.index) & set(top_n['Item']))
 
         filtered_top_n_df = top_n.filter(items=recommended_relevant_items, axis=0)
         filtered_user_ratings_df = user_ratings.filter(items=recommended_relevant_items, axis=0)
@@ -56,7 +71,7 @@ def precision(recommended_items, user_relevant_items):
 
     return float(len(recommended_relevant_items)) / float(len(recommended_items))
 
-def mean_average_precision(ratings, predictions):
+def mean_average_precision():
     user_id = '64'
 
     average_precision = 0.0
@@ -65,11 +80,12 @@ def mean_average_precision(ratings, predictions):
         precision_for_user = 0.0
         user_relevant_items = ratings[ratings[user_id] > 3.0][user_id].dropna()
 
-        top_n = top_n_for_user(predictions, user_id, 5)
+        top_n = top_n_for_user(user_id, 5)
         
-        for i in range(len(top_n.index)):
-            recommended_at_k = top_n_for_user(predictions, user_id, i+1)
-            candidate_item = list(top_n.index)[i]
+        for i in range(len(top_n['Item'])):
+            # TODO: Review after Top_N change
+            recommended_at_k = top_n_for_user(user_id, i+1)
+            candidate_item = list(top_n['Item'])[i]
             
             if candidate_item in list(user_relevant_items.index):
                 precision_for_user += precision(recommended_at_k, user_relevant_items)
@@ -78,18 +94,66 @@ def mean_average_precision(ratings, predictions):
 
     return average_precision / float(len(users))
 
-def coverage(ratings, predictions):
+def coverage():
+    items_recommended = set()
+
+    for user_id in users:
+        top_n = top_n_for_user(user_id, 5)
+        top_n_items = set(top_n['Item'])
+
+        items_recommended = items_recommended | top_n_items
+
+    return float(len(items_recommended))/float(len(items))
+
+def average_availability_by_user():
+    availability = 0.0
+
+    for user_id in users:
+        availability_for_user = 0.0
+        top_n = top_n_for_user(user_id, 5)
+
+        top_n_items = top_n['Item']
+
+        for top_n_item in top_n_items:
+            items_found = [item for item in items if item['id'] == top_n_item]
+
+            availability_for_user += items_found[0]['Availability']
+
+        availability += availability_for_user/float(len(top_n_items))
+
+    return availability/float(len(users))
+
+'''
+def intralist_category_diversity():
     # TBD
 
-def intralist_category_diversity(ratings, predictions):
+def intralist_price_diversity():
     # TBD
+'''
 
-def intralist_price_diversity(ratings, predictions):
-    # TBD
+algorithms = ['cbf.csv', 'item-item.csv', 'mf.csv', 'perbias.csv', 'user-user.csv']
 
-
-users = pd.read_csv('cbf.csv', nrows=1).columns[1:] 
-predictions = pd.read_csv('cbf.csv')
 ratings = pd.read_csv('ratings.csv')
 
-print 'MRR', mrr(ratings, predictions), 'RMSE', rmse(ratings, predictions), 'MAP', mean_average_precision(ratings, predictions)
+items = []
+read_items_from_file()
+
+results = { 'MRR': [], 'RMSE': [], 'MAP': [], 'Coverage': [], 'Average Availability': [] }
+
+for algorithm in algorithms:
+    users = pd.read_csv(algorithm, nrows=1).columns[1:] 
+    predictions = pd.read_csv(algorithm)
+
+    top_n_by_user = {}
+    generate_top_n_for_all_users()
+    average_availability_by_user()
+
+    # results['MRR'].append(mrr())
+    # results['RMSE'].append(rmse())
+    # results['MAP'].append(mean_average_precision())
+    results['Coverage'].append(coverage())
+    results['Average Availability'].append(average_availability_by_user())
+
+print results
+# result_df = pd.DataFrame(data=results, index=algorithms)
+# print result_df
