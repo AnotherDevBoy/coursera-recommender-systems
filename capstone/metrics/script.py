@@ -2,8 +2,7 @@ import pandas as pd
 from math import sqrt
 import numpy as np   
 
-def top_n_for_user(user_id, n):
-    return top_n_by_user[user_id].head(n=n)
+top_n_by_user = {}
 
 def generate_top_n_for_all_users():
     for user_id in users:
@@ -11,6 +10,16 @@ def generate_top_n_for_all_users():
         
         predictions_for_user = predictions_for_user.sort_values(by=[user_id], ascending=False)
         top_n_by_user[user_id] = predictions_for_user
+
+def get_ratings(user_id):
+    return ratings[['item', user_id]]
+
+def get_top_n(user_id, n):
+    return top_n_by_user[user_id].head(n=n)
+
+def get_relevant_items_for_user(user_id):
+    user_ratings = get_ratings(user_id)
+    return user_ratings[user_ratings[user_id] > 3.0]
 
 def read_items_from_file():
     items_df = pd.read_csv('items.csv')
@@ -24,21 +33,20 @@ def mrr():
     mrr = 0.0
 
     for user_id in users:
-        user_ratings = ratings[user_id].dropna()
-
-        top_n = top_n_for_user(user_id, 5)
+        user_relevant_items = get_relevant_items_for_user(user_id)
+        top_n = get_top_n(user_id, 5)
 
         rank = 1.0
 
         for recommendation in top_n.iterrows():
             recommended_item = recommendation[1]['Item']
 
-            if recommended_item in user_ratings:
-                mrr += 1/rank
+            if recommended_item in list(user_relevant_items['item']):
+                mrr += 1.0/rank
             
             rank += 1.0
 
-    number_of_users = 1.0 * len(users)
+        number_of_users = 1.0 * len(users)
 
     return  mrr/number_of_users
 
@@ -49,7 +57,7 @@ def rmse():
     for user_id in users:
         user_ratings = ratings[user_id].dropna()
         # TODO: Review after Top_N change
-        top_n = top_n_for_user(user_id, 5)
+        top_n = get_top_n(user_id, 5)
 
         recommended_relevant_items = list(set(user_ratings.index) & set(top_n['Item']))
 
@@ -78,13 +86,13 @@ def mean_average_precision():
 
     for user_id in users:
         precision_for_user = 0.0
-        user_relevant_items = ratings[ratings[user_id] > 3.0][user_id].dropna()
+        user_relevant_items = get_relevant_items_for_user(user_id)
 
-        top_n = top_n_for_user(user_id, 5)
+        top_n = get_top_n(user_id, 5)
         
         for i in range(len(top_n['Item'])):
             # TODO: Review after Top_N change
-            recommended_at_k = top_n_for_user(user_id, i+1)
+            recommended_at_k = get_top_n(user_id, i+1)
             candidate_item = list(top_n['Item'])[i]
             
             if candidate_item in list(user_relevant_items.index):
@@ -98,7 +106,7 @@ def coverage():
     items_recommended = set()
 
     for user_id in users:
-        top_n = top_n_for_user(user_id, 5)
+        top_n = get_top_n(user_id, 5)
         top_n_items = set(top_n['Item'])
 
         items_recommended = items_recommended | top_n_items
@@ -110,7 +118,7 @@ def average_availability_by_user():
 
     for user_id in users:
         availability_for_user = 0.0
-        top_n = top_n_for_user(user_id, 5)
+        top_n = get_top_n(user_id, 5)
 
         top_n_items = top_n['Item']
 
@@ -140,19 +148,19 @@ read_items_from_file()
 
 results = { 'MRR': [], 'RMSE': [], 'MAP': [], 'Coverage': [], 'Average Availability': [] }
 
-for algorithm in algorithms:
-    users = pd.read_csv(algorithm, nrows=1).columns[1:] 
-    predictions = pd.read_csv(algorithm)
+algorithm = algorithms[-1]
+print algorithm
+#for algorithm in algorithms:
+users = pd.read_csv(algorithm, nrows=1).columns[1:] 
+predictions = pd.read_csv(algorithm)
+generate_top_n_for_all_users()
+average_availability_by_user()
 
-    top_n_by_user = {}
-    generate_top_n_for_all_users()
-    average_availability_by_user()
-
-    # results['MRR'].append(mrr())
-    # results['RMSE'].append(rmse())
-    # results['MAP'].append(mean_average_precision())
-    results['Coverage'].append(coverage())
-    results['Average Availability'].append(average_availability_by_user())
+results['MRR'].append(mrr())
+# results['RMSE'].append(rmse())
+# results['MAP'].append(mean_average_precision())
+results['Coverage'].append(coverage())
+results['Average Availability'].append(average_availability_by_user())
 
 print results
 # result_df = pd.DataFrame(data=results, index=algorithms)
