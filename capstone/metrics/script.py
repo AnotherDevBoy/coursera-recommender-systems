@@ -11,6 +11,7 @@ def generate_top_n_for_all_users():
         predictions_for_user = predictions_for_user.sort_values(by=[user_id], ascending=False)
         top_n_by_user[user_id] = predictions_for_user
 
+
 # TODO: Define more accurate ranges based on price distribution
 def get_price_tag(price):
     if np.isnan(price):
@@ -46,18 +47,23 @@ def read_items_from_file():
         item = { 'id': item_r[1]['Item'], 'Availability': item_r[1]['Availability'], 'Price': item_r[1]['Price'], 'PriceTag': price_tag }
         items.append(item)
 
+
 def get_ratings(user_id):
     return ratings[['item', user_id]].dropna()
+
 
 def get_predictions(user_id):
     return predictions[['Item', user_id]].dropna()
 
+
 def get_top_n(user_id, n):
     return top_n_by_user[user_id].head(n=n)
+
 
 def get_relevant_items_for_user(user_id):
     user_ratings = get_ratings(user_id)
     return user_ratings[user_ratings[user_id] > 3.0]
+
 
 def get_item_by_id(item_id):
     items_found = [item for item in items if item['id'] == item_id]
@@ -66,6 +72,7 @@ def get_item_by_id(item_id):
         return items_found[0]
 
     return -1
+
 
 def mrr():
     mrr = 0.0
@@ -85,6 +92,7 @@ def mrr():
         number_of_users = float(len(users))
 
     return  mrr/number_of_users
+
 
 def rmse_top_n():
     sum_squared_error = 0.0
@@ -110,6 +118,7 @@ def rmse_top_n():
             total_ratings += float(len(recommended_and_rated_items))
 
     return sqrt(sum_squared_error / total_ratings)
+
 
 def rmse_predict():
     sum_squared_error = 0.0
@@ -138,8 +147,8 @@ def rmse_predict():
 
 def precision(recommended_items, user_relevant_items):
     recommended_relevant_items = list(set(recommended_items['Item']) & set(user_relevant_items['item']))
-
     return float(len(recommended_relevant_items)) / float(len(recommended_items['Item']))
+
 
 def mean_average_precision():
     average_precision = 0.0
@@ -161,6 +170,7 @@ def mean_average_precision():
 
     return average_precision / float(len(users))
 
+
 def coverage():
     items_recommended = set()
 
@@ -171,6 +181,7 @@ def coverage():
         items_recommended = items_recommended | top_n_items
 
     return float(len(items_recommended))/float(len(items))
+
 
 def average_availability_by_user():
     availability = 0.0
@@ -188,6 +199,7 @@ def average_availability_by_user():
         availability += availability_for_user/float(len(top_n_items))
 
     return availability/float(len(users))
+
 
 def intralist_price_diversity():
     average_disimilarity = 0.0
@@ -212,6 +224,7 @@ def intralist_price_diversity():
         average_disimilarity += disimilarity_per_user
 
     return average_disimilarity/float(len(users))
+
 
 def print_items_from_list(item_list):
     items = []
