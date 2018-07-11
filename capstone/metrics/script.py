@@ -103,31 +103,28 @@ def rmse_predict():
     return sqrt(sum_squared_error / total_ratings)
 
 def precision(recommended_items, user_relevant_items):
-    recommended_relevant_items = list(set(user_relevant_items.index) & set(recommended_items.index))
+    recommended_relevant_items = list(set(recommended_items['Item']) & set(user_relevant_items['item']))
 
-    return float(len(recommended_relevant_items)) / float(len(recommended_items))
+    return float(len(recommended_relevant_items)) / float(len(recommended_items['Item']))
 
 def mean_average_precision():
-    # TODO: Review after Top_N change
-    user_id = '64'
-
     average_precision = 0.0
 
-    for user_id in users:
-        precision_for_user = 0.0
-        user_relevant_items = get_relevant_items_for_user(user_id)
+    user_id = '64'
 
-        top_n = get_top_n(user_id, 5)
+    precision_for_user = 0.0
+    user_relevant_items = get_relevant_items_for_user(user_id)
+
+    top_n = get_top_n(user_id, 5)
+    
+    for i in range(len(top_n['Item'])):
+        recommended_at_k = get_top_n(user_id, i+1)
+        candidate_item = list(top_n['Item'])[i]
         
-        for i in range(len(top_n['Item'])):
-            # TODO: Review after Top_N change
-            recommended_at_k = get_top_n(user_id, i+1)
-            candidate_item = list(top_n['Item'])[i]
-            
-            if candidate_item in list(user_relevant_items.index):
-                precision_for_user += precision(recommended_at_k, user_relevant_items)
-        
-        average_precision += precision_for_user / float(len(user_relevant_items))
+        if candidate_item in list(user_relevant_items['item']):
+            precision_for_user += precision(recommended_at_k, user_relevant_items)
+    
+    average_precision += precision_for_user / float(len(user_relevant_items))
 
     return average_precision / float(len(users))
 
@@ -188,7 +185,7 @@ average_availability_by_user()
 results['MRR'].append(mrr())
 results['RMSE.Predict'].append(rmse_predict())
 results['RMSE.TopN'].append(rmse_top_n())
-# results['MAP'].append(mean_average_precision())
+results['MAP'].append(mean_average_precision())
 results['Coverage'].append(coverage())
 results['Average Availability'].append(average_availability_by_user())
 
