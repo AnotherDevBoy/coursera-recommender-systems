@@ -13,3 +13,6 @@
 | mf.csv            |         0.521616 |              0.4440 |    0.045 | 0.009378 | 0.123667 |     0.688283 |  0.382229 |
 | perbias.csv       |         0.566868 |              0.4800 |    0.025 | 0.009073 | 0.114500 |     0.695627 |  0.496585 |
 | user-user.csv     |         0.695152 |              0.3384 |    0.755 | 0.181251 | 1.330833 |     0.551891 |  0.323100 |
+
+# Sources
+- [Recommender Systems — It’s Not All About the Accuracy](https://gab41.lab41.org/recommender-systems-its-not-all-about-the-accuracy-562c7dceeaff)

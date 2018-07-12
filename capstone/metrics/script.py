@@ -1,7 +1,7 @@
 import pandas as pd
 from math import sqrt
 import numpy as np   
-from sklearn.metrics import mean_squared_error, average_precision_score
+from sklearn.metrics import mean_squared_error, average_precision_score, precision_score
 
 top_n_by_user = {}
 
@@ -148,7 +148,7 @@ def mean_average_precision():
     return average_precision / float(len(users))
 
 
-def coverage():
+def item_coverage():
     items_recommended = set()
 
     for user_id in users:
@@ -158,6 +158,19 @@ def coverage():
         items_recommended = items_recommended | top_n_items
 
     return float(len(items_recommended))/float(len(items))
+
+
+def user_coverage():
+    users_covered = 0.0
+
+    for user_id in users:
+        top_n = get_top_n(user_id, 5)
+        top_n_items = set(top_n['Item'])
+
+        if top_n_items:
+            users_covered += 1.0
+
+    return users_covered/float(len(users))
 
 
 def average_availability_by_user():
@@ -224,7 +237,7 @@ ratings = pd.read_csv('ratings.csv')
 items = []
 read_items_from_file()
 
-results = { 'MRR': [], 'RMSE.Predict': [], 'RMSE.TopN': [], 'MAP': [], 'Coverage': [], 'Avg Availability': [], 'Avg Price Diversity': [] }
+results = { 'MRR': [], 'RMSE.Predict': [], 'RMSE.TopN': [], 'MAP': [], 'Item Coverage': [], 'User Coverage': [], 'Avg Availability': [], 'Avg Price Diversity': [] }
 
 algorithm = algorithms[-1]
 for algorithm in algorithms:
@@ -237,11 +250,10 @@ for algorithm in algorithms:
     results['RMSE.Predict'].append(rmse_predict())
     results['RMSE.TopN'].append(rmse_top_n())
     results['MAP'].append(mean_average_precision())
-    results['Coverage'].append(coverage())
+    results['Item Coverage'].append(item_coverage())
+    results['User Coverage'].append(user_coverage())
     results['Avg Availability'].append(average_availability_by_user())
     results['Avg Price Diversity'].append(intralist_price_diversity())
-
-    #print_items_from_list(list(get_top_n('64', 5)['Item']))
 
 result_df = pd.DataFrame(data=results, index=algorithms)
 print result_df
