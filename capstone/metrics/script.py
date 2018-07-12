@@ -95,32 +95,14 @@ def mrr():
     return  mrr/number_of_users
 
 
-def rmse_top_n():
+def rmse(get_predicted_values, *argv):
     good_values = np.array([])
     predicted_values = np.array([])
 
     for user_id in users:
         user_ratings = get_ratings(user_id)
-        top_n = get_top_n(user_id, 5)
 
-        predicted_and_rated_items = list(set(user_ratings['item']) & set(top_n['Item']))
-
-        if predicted_and_rated_items:
-            user_ratings_df = user_ratings[user_ratings['item'].isin(predicted_and_rated_items)]
-            top_n_df = top_n[top_n['Item'].isin(predicted_and_rated_items)]
-            good_values = np.append(good_values, np.array(user_ratings_df[user_id]))
-            predicted_values = np.append(predicted_values, np.array(top_n_df[user_id]))
-
-    return sqrt(mean_squared_error(good_values, predicted_values))
-
-
-def rmse_predict():
-    good_values = np.array([])
-    predicted_values = np.array([])
-
-    for user_id in users:
-        user_ratings = get_ratings(user_id)
-        user_predictions = get_predictions(user_id)
+        user_predictions = get_predicted_values(user_id, argv[0]) if argv else get_predicted_values(user_id)
 
         predicted_and_rated_items = list(set(user_ratings['item']) & set(user_predictions['Item']))
 
@@ -131,6 +113,13 @@ def rmse_predict():
             predicted_values = np.append(predicted_values, np.array(user_predictions_df[user_id]))
 
     return sqrt(mean_squared_error(good_values, predicted_values))
+
+def rmse_top_n():
+    return rmse(get_top_n, 5)
+
+
+def rmse_predict():
+    return rmse(get_predictions)
 
 
 def precision(recommended_items, user_relevant_items):
