@@ -30,11 +30,5 @@ def intralist_field_diversity(users, field):
 def intralist_price_diversity(users):
     return intralist_field_diversity(users, 'PriceTag')
 
-def intralist_leafcategory_diversity(users):
+def intralist_category_diversity(users):
     return intralist_field_diversity(users, 'LeafCat')
-
-
-'''
-def intralist_category_diversity():
-    # TBD
-'''

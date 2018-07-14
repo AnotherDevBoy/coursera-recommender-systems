@@ -5,9 +5,9 @@ from math import sqrt
 import numpy as np
 
 from lib.availability import average_availability_by_user
-from lib.coverage import item_coverage, user_coverage
+from lib.coverage import item_coverage, user_coverage, category_coverage
 from lib.data import *
-from lib.diversity import intralist_price_diversity, intralist_leafcategory_diversity
+from lib.diversity import intralist_price_diversity, intralist_category_diversity
 from lib.mrr import mrr
 from lib.precision import mean_average_precision
 from lib.rmse import rmse_top_n, rmse_predict
@@ -22,7 +22,7 @@ set_ratings(read_ratings_from_file())
 items = read_items_from_file()
 set_items(items)
 
-results = { 'MRR': [], 'RMSE.Predict': [], 'RMSE.TopN': [], 'MAP': [], 'Item Coverage': [], 'User Coverage': [], 'Avg Availability': [], 'Avg Price Diversity': [], 'Avg LeafCategory Diversity': [] }
+results = { 'MRR': [], 'RMSE.Predict': [], 'RMSE.TopN': [], 'MAP': [], 'Item Coverage': [], 'User Coverage': [], 'Category Coverage': [], 'Avg Availability': [], 'Avg Price Diversity': [], 'Avg Category Diversity': [] }
 
 users = get_users()
 
@@ -40,9 +40,10 @@ for algorithm in algorithms:
     results['MAP'].append(mean_average_precision(users))
     results['Item Coverage'].append(item_coverage(users, items))
     results['User Coverage'].append(user_coverage(users))
+    results['Category Coverage'].append(category_coverage(users, items))
     results['Avg Availability'].append(average_availability_by_user(users))
     results['Avg Price Diversity'].append(intralist_price_diversity(users))
-    results['Avg LeafCategory Diversity'].append(intralist_leafcategory_diversity(users))
+    results['Avg Category Diversity'].append(intralist_category_diversity(users))
 
 result_df = pd.DataFrame(data=results, index=algorithms)
 print result_df
