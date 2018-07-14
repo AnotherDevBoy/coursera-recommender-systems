@@ -33,7 +33,7 @@ def read_items_from_file():
 
     for item_r in items_df.iterrows():
         price_tag = get_price_tag(item_r[1]['Price'])
-        item = { 'id': item_r[1]['Item'], 'Availability': item_r[1]['Availability'], 'Price': item_r[1]['Price'], 'PriceTag': price_tag }
+        item = { 'id': item_r[1]['Item'], 'Availability': item_r[1]['Availability'], 'Price': item_r[1]['Price'], 'PriceTag': price_tag, 'LeafCat': item_r[1]['LeafCat'] }
         items.append(item)
 
     return items
