@@ -24,12 +24,12 @@ def get_ratings(user_id):
 def get_ratings_for_item(user_id, item_id):
     user_ratings = get_ratings(user_id)
 
-    rating = user_ratings.loc[user_ratings['item'] == int(user_id)]
+    rating = user_ratings.loc[user_ratings['item'] == int(item_id)]
 
     if rating.empty:
         return None
 
-    return rating[user_id]
+    return  rating.iloc[0][user_id]
 
 
 def get_average_user_rating(user_id):
@@ -45,13 +45,11 @@ def get_average_user_rating(user_id):
 
 
 def is_item_relevant_for_user(user_id, item_id):
-    # Get User rating for item
     user_rating = get_ratings_for_item(user_id, item_id)
 
     if not user_rating:
         return False
 
-    # Get Average User rating
     average_user_rating = get_average_user_rating(user_id)
 
     return user_rating >= average_user_rating
@@ -111,7 +109,7 @@ def set_ratings(ratings_arg):
 
 
 def is_item_popular(item_id):
-    return items_popularity[item_id] > 0.15
+    return items_popularity[item_id] >= 0.15
 
 
 def set_predictions(predictions_arg):

@@ -12,7 +12,7 @@ from lib.mrr import mrr
 from lib.precision import mean_average_precision
 from lib.rmse import rmse_top_n, rmse_predict
 from lib.utils import read_items_from_file, read_ratings_from_file, read_predictions_from_file, print_items_from_list
-
+from lib.serendipity import serendipity
 
 pd.set_option('display.max_columns', None)
 
@@ -22,7 +22,7 @@ set_ratings(read_ratings_from_file())
 items = read_items_from_file()
 set_items(items)
 
-results = { 'MRR': [], 'RMSE.Predict': [], 'RMSE.TopN': [], 'MAP': [], 'Item Coverage': [], 'User Coverage': [], 'Category Coverage': [], 'Avg Availability': [], 'Avg Price Diversity': [], 'Avg Category Diversity': [] }
+results = { 'MRR': [], 'RMSE.Predict': [], 'RMSE.TopN': [], 'MAP': [], 'Item Coverage': [], 'User Coverage': [], 'Category Coverage': [], 'Avg Availability': [], 'Avg Price Diversity': [], 'Avg Category Diversity': [], 'Avg Serendipity': [] }
 
 for algorithm in algorithms:
     predictions = read_predictions_from_file(algorithm)
@@ -42,6 +42,7 @@ for algorithm in algorithms:
     results['Avg Availability'].append(average_availability_by_user(users))
     results['Avg Price Diversity'].append(intralist_price_diversity(users))
     results['Avg Category Diversity'].append(intralist_category_diversity(users))
+    results['Avg Serendipity'].append(serendipity(users))
 
 result_df = pd.DataFrame(data=results, index=algorithms)
 print result_df
