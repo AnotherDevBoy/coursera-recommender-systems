@@ -24,8 +24,6 @@ set_items(items)
 
 results = { 'MRR': [], 'RMSE.Predict': [], 'RMSE.TopN': [], 'MAP': [], 'Item Coverage': [], 'User Coverage': [], 'Category Coverage': [], 'Avg Availability': [], 'Avg Price Diversity': [], 'Avg Category Diversity': [] }
 
-users = get_users()
-
 for algorithm in algorithms:
     predictions = read_predictions_from_file(algorithm)
     set_predictions(predictions)
