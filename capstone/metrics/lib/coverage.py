@@ -16,7 +16,7 @@ def user_coverage(users):
     users_covered = 0.0
 
     for user_id in users:
-        top_n = get_top_n(user_id, 5)
+        top_n = get_top_n(user_id, 5).dropna()
         top_n_items = set(top_n['Item'])
 
         if top_n_items:
