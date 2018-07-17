@@ -1,6 +1,5 @@
 import numpy as np
-from sklearn.metrics import ndcg_score
-from data import get_top_n
+from data import get_top_n, is_item_relevant_for_user, get_ratings_for_item
 
 def log_discount(ranking):
     return np.log2(ranking+1)
@@ -23,12 +22,10 @@ def dcg(user_id):
     total_dcg = 0.0
 
     ranking = 1.0
-    for item in top_n.iterrows():
-        # This should use relevance instead (0 or 1)
-        # https://en.wikipedia.org/wiki/Discounted_cumulative_gain
-        # Use http://sklearn.apachecn.org/en/0.19.0/modules/generated/sklearn.metrics.ndcg_score.html
-        rating = item[1][user_id]
-        total_dcg += rating/log_discount(ranking)
+    for recommendation in top_n.iterrows():
+        if is_item_relevant_for_user(user_id, recommendation[1]['Item']):
+            prediction = recommendation[1][user_id]
+            total_dcg += prediction/log_discount(ranking)
 
         ranking += 1.0
 

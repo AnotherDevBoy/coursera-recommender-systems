@@ -5,7 +5,7 @@
 - [x] Refactor metrics into different files
 - [ ] Implement personalization metric (average difference in top N lists across users)
 - [x] Implement Serendipity (Intersection of the unexpected items with the relevant items divided by the number of items recommended)
-- [ ] Implement nDCG
+- [x] Implement nDCG
 - [x] Item Relevance is based on user average rating
 
 # Current Results
