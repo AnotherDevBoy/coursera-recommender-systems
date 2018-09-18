@@ -1,12 +1,13 @@
 # TODO
-- [ ] Output Top N per User/Algorithm in files
-- [x] Implement Category Diversity metric
-- [ ] Improve Price Category based on price distribution
-- [x] Refactor metrics into different files
-- [ ] Implement personalization metric (average difference in top N lists across users)
 - [x] Implement Serendipity (Intersection of the unexpected items with the relevant items divided by the number of items recommended)
 - [x] Implement nDCG
 - [x] Item Relevance is based on user average rating
+- [x] Implement Category Diversity metric
+- [x] Refactor metrics into different files
+- [ ] Output Top N per User/Algorithm to files
+- [ ] Improve Price Category based on price distribution
+- [ ] Implement personalization metric (average difference in top N lists across users)
+
 
 # Current Results
 
