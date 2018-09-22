@@ -35,7 +35,6 @@ def dcg(user_id):
 
 
 def ndcg(user_id):
-  dcg_val = dcg(user_id)
   return dcg(user_id)/cached_max_ndcg
 
 

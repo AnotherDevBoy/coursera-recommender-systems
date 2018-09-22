@@ -7,22 +7,15 @@ def precision(recommended_items, user_relevant_items):
   return float(len(recommended_relevant_items)) / float(len(recommended_items['Item']))
 
 
-def mean_average_precision(users):
-  average_precision = 0.0
+def mean_average_precision_for_user(top_n, user_id):
+  precision_for_user = 0.0
+  user_relevant_items = get_relevant_items_for_user(user_id)
 
-  for user_id in users:
-    user_relevant_items = get_relevant_items_for_user(user_id)
-    top_n = get_top_n(user_id, 5)
+  for i in range(len(top_n['Item'])):
+    recommended_at_k = get_top_n(user_id, i+1)
+    candidate_item = list(top_n['Item'])[i]
 
-    precision_for_user = 0.0
+    if candidate_item in list(user_relevant_items['item']):
+      precision_for_user += precision(recommended_at_k, user_relevant_items)
 
-    for i in range(len(top_n['Item'])):
-      recommended_at_k = get_top_n(user_id, i+1)
-      candidate_item = list(top_n['Item'])[i]
-
-      if candidate_item in list(user_relevant_items['item']):
-        precision_for_user += precision(recommended_at_k, user_relevant_items)
-
-    average_precision += precision_for_user / float(len(user_relevant_items))
-
-  return average_precision / float(len(users))
+  return precision_for_user / float(len(user_relevant_items))
