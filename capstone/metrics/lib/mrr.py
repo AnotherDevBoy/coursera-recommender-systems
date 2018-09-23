@@ -1,4 +1,3 @@
-from data import get_relevant_items_for_user
 
 
 def mrr_for_user(top_n, user_relevant_items):

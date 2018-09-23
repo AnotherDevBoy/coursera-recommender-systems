@@ -28,9 +28,13 @@ def read_items_from_file():
 
   for item_r in items_df.iterrows():
     price_tag = get_price_tag(item_r[1]['Price'])
-    item = {'id': item_r[1]['Item'], 'Availability': item_r[1]['Availability'],
-            'Price': item_r[1]['Price'], 'PriceTag': price_tag, 'LeafCat': item_r[1]['LeafCat']}
-    items.append(item)
+    items.append({
+      'id': item_r[1]['Item'],
+      'Availability': item_r[1]['Availability'],
+      'Price': item_r[1]['Price'],
+      'PriceTag': price_tag,
+      'LeafCat': item_r[1]['LeafCat']
+    })
 
   return items
 
@@ -44,11 +48,20 @@ def read_predictions_from_file(file):
   return pd.read_csv(predictions_path)
 
 
-def print_items_from_list(item_list):
-  items = []
+def calculate_statistics(np_values):
+  return {
+    'min': np_values.min(),
+    'max': np_values.max(),
+    'mean': np_values.mean(),
+    '10': np.percentile(np_values, 10),
+    '25': np.percentile(np_values, 25),
+    '50': np.percentile(np_values, 50),
+    '75': np.percentile(np_values, 75),
+    '95': np.percentile(np_values, 95),
+  }
 
-  for item in item_list:
-    items.append(get_item_by_id(item))
+def generate_output_files(results, metricName):
+  filename = './output/%s.csv' % (metricName)
 
-  items_df = pd.DataFrame(data=items)
-  print items_df
+  df = pd.DataFrame.from_dict(results[metricName])
+  df.to_csv(filename, encoding='utf-8')

@@ -1,5 +1,5 @@
 import numpy as np
-from data import is_item_relevant_for_user, get_ratings_for_item
+from data import is_item_relevant_for_user
 
 
 def log_discount(ranking):
