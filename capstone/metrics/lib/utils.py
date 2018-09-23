@@ -48,7 +48,9 @@ def read_predictions_from_file(file):
   return pd.read_csv(predictions_path)
 
 
-def calculate_statistics(np_values):
+def calculate_statistics(values):
+  np_values = np.array(values)
+
   return {
     'min': np_values.min(),
     'max': np_values.max(),

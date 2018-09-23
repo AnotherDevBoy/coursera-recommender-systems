@@ -20,8 +20,10 @@ from lib.utils import read_items_from_file, read_ratings_from_file, read_predict
 start_time = time.time()
 
 ALGORITHMS = ['cbf', 'item-item', 'mf', 'perbias', 'user-user']
-SUPPORTED_METRICS = ['Coverage.Item', 'Coverage.User', 'Coverage.Category',
-                     'Availability', 'MRR', 'Serendipity', 'MAP', 'RMSE.Predict', 'RMSE.Predict', 'RMSE.TopN', 'nDCG', 'Diversity.Price', 'Diversity.Category']
+
+SINGLEVALUE_METRICS = ['Coverage.Item', 'Coverage.User']
+MULTIVALUE_METRICS = ['Availability', 'MRR', 'Serendipity',
+                    'MAP', 'RMSE.Predict', 'RMSE.TopN', 'nDCG', 'Diversity.Price', 'Diversity.Category']
 
 set_ratings(read_ratings_from_file())
 ITEMS = read_items_from_file()
@@ -30,11 +32,10 @@ ALL_CATEGORIES = set(map(lambda x: x['LeafCat'], ITEMS))
 
 results = {}
 
-for metric in SUPPORTED_METRICS:
+for metric in (SINGLEVALUE_METRICS + MULTIVALUE_METRICS):
   results[metric] = {}
 
 for algorithm in ALGORITHMS:
-  results[algorithm] = {}
   predictions = read_predictions_from_file(algorithm)
   set_predictions(predictions)
 
@@ -43,7 +44,6 @@ for algorithm in ALGORITHMS:
 
   items_recommended = set()
   users_covered = 0.0
-  covered_categories = set()
 
   availability_values = []
   mrr_values = []
@@ -67,51 +67,31 @@ for algorithm in ALGORITHMS:
     if is_user_covered(top_n):
       users_covered += 1.0
 
-    covered_categories = covered_categories | category_coverage_for_user(top_n)
-
     # Other metrics
     availability_values.append(availability_for_user(top_n))
     mrr_values.append(mrr_for_user(top_n, user_relevant_items))
     serendipity_values.append(serendipity_for_user(top_n, user_id))
     map_values.append(mean_average_precision_for_user(top_n, user_id))
-    rmse_predict_values.append(rmse_for_user(
-        user_id, user_ratings, user_predictions))
+    rmse_predict_values.append(rmse_for_user(user_id, user_ratings, user_predictions))
     rmse_top_values.append(rmse_for_user(user_id, user_ratings, top_n))
     ndcg_values.append(ndcg(user_id, top_n))
     diversity_price_values.append(intralist_price_diversity_for_user(top_n))
-    diversity_category_values.append(
-        intralist_category_diversity_for_user(top_n))
+    diversity_category_values.append(intralist_category_diversity_for_user(top_n))
 
-  availability_values = np.array(availability_values)
-  mrr_values = np.array(mrr_values)
-  serendipity_values = np.array(serendipity_values)
-  map_values = np.array(map_values)
-  rmse_predict_values = np.array(rmse_predict_values)
-  rmse_top_values = np.array(rmse_top_values)
-  ndcg_values = np.array(ndcg_values)
-  diversity_price_values = np.array(diversity_price_values)
-  diversity_category_values = np.array(diversity_category_values)
-
-  results['Coverage.Item'][algorithm] = [
-      float(len(items_recommended))/float(len(ITEMS))]
-  results['Coverage.User'][algorithm] = [users_covered/float(len(users))]
-  results['Coverage.Category'][algorithm] = [
-      float(len(covered_categories))/float(len(ALL_CATEGORIES))]
-  results['Availability'][algorithm] = calculate_statistics(
-      availability_values)
+  results['Availability'][algorithm] = calculate_statistics(availability_values)
   results['MRR'][algorithm] = calculate_statistics(mrr_values)
   results['Serendipity'][algorithm] = calculate_statistics(serendipity_values)
   results['MAP'][algorithm] = calculate_statistics(map_values)
-  results['RMSE.Predict'][algorithm] = calculate_statistics(
-      rmse_predict_values)
+  results['RMSE.Predict'][algorithm] = calculate_statistics(rmse_predict_values)
   results['RMSE.TopN'][algorithm] = calculate_statistics(rmse_top_values)
   results['nDCG'][algorithm] = calculate_statistics(ndcg_values)
-  results['Diversity.Price'][algorithm] = calculate_statistics(
-      diversity_price_values)
-  results['Diversity.Category'][algorithm] = calculate_statistics(
-      diversity_category_values)
+  results['Diversity.Price'][algorithm] = calculate_statistics(diversity_price_values)
+  results['Diversity.Category'][algorithm] = calculate_statistics(diversity_category_values)
 
-for metric in SUPPORTED_METRICS:
+  results['Coverage.Item'][algorithm] = [float(len(items_recommended))/float(len(ITEMS))]
+  results['Coverage.User'][algorithm] = [users_covered/float(len(users))]
+
+for metric in (SINGLEVALUE_METRICS + MULTIVALUE_METRICS):
   generate_output_files(results, metric)
 
 elapsed_time = time.time() - start_time
