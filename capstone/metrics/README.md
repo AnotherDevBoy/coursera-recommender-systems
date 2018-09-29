@@ -1,12 +1,9 @@
-# TODO
-- [x] Implement Serendipity (Intersection of the unexpected items with the relevant items divided by the number of items recommended)
-- [x] Implement nDCG
-- [x] Item Relevance is based on user average rating
-- [x] Implement Category Diversity metric
-- [x] Refactor metrics into different files
-- [x] Improve Price Category based on price distribution
-- [ ] Output Top N per User/Algorithm to files
+﻿## Pre-requisites
+Anaconda suite installed
 
+## How to run
+1. Open cmd
+2. Run `jupyter notebook`
 
 # Supported Metrics
 ## Availability
