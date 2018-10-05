@@ -8,6 +8,8 @@ ratings = None
 predictions = None
 top_n_by_user = {}
 items_popularity = {}
+ratings_distribution = {}
+cold_users = []
 
 #########################################################################
 # Generators
@@ -31,11 +33,12 @@ def generate_top_n_for_all_users(users):
 def set_predictions(predictions_arg):
   global predictions
   global users
+  global ratings_distribution
+  global cold_users
   predictions = predictions_arg
   users = users | set(predictions.columns[1:])
 
-
-def set_ratings(ratings_arg):
+def set_ratings(ratings_arg, cold_max_number_of_ratings=10):
   global ratings
   global items_popularity
   ratings = ratings_arg
@@ -50,6 +53,17 @@ def set_ratings(ratings_arg):
 
     popularity = float(ratings_for_item)/float(len(users_that_rated))
     items_popularity[item] = popularity
+
+  for user_id in users_that_rated:
+    ratings_count = len(ratings[user_id].dropna())
+
+    if ratings_count in ratings_distribution:
+      ratings_distribution[ratings_count] += 1
+    else:
+      ratings_distribution[ratings_count] = 1
+
+    if ratings_count <= cold_max_number_of_ratings:
+      cold_users.append(user_id)
 
 
 def set_items(items_arg):
@@ -66,13 +80,11 @@ def get_users():
 
 
 def get_cold_users():
-  cold_users = []
-
-  for user_id in users:
-    if len(ratings[user_id].dropna()) <= 10:
-      cold_users.append(user_id)
-
   return cold_users
+
+
+def get_ratings_distribution():
+  return ratings_distribution
 
 def get_ratings(user_id):
   return ratings[['item', user_id]].dropna()
