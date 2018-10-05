@@ -2,28 +2,32 @@ import numpy as np
 from data import is_item_relevant_for_user
 
 
-def log_discount(ranking):
-  return np.log2(ranking+1)
+def dcg(ratings):
+  dcg = 0.0
 
+  for rank in range(len(ratings)):
+    dcg += ratings[rank]/np.log2(rank+2)
 
-def max_dcg(number_of_items, max_rating):
-  total_max_dcg = 0.0
-
-  for rank in range(number_of_items):
-    total_max_dcg += max_rating/log_discount(rank+1)
-
-  return total_max_dcg
+  return dcg
 
 
 def ndcg(user_id, top_n):
-  dcg = 0.0
+  max_dcg = dcg(np.repeat(5.0, len(top_n)))
 
-  ranking = 1.0
+  ratings = []
+
   for recommendation in top_n.iterrows():
     if is_item_relevant_for_user(user_id, recommendation[1]['Item']):
+      ratings.append(recommendation[1][user_id])
+    else:
+      ratings.append(0.0)
+
+  '''
+  for rank in range(1, number_of_items+1):
+    recommendation = top_n.loc[rank-1]
+    if is_item_relevant_for_user(user_id, recommendation[1]['Item']):
       prediction = recommendation[1][user_id]
-      dcg += prediction/log_discount(ranking)
+      dcg += prediction/np.log2(rank+1)
+  '''
 
-    ranking += 1.0
-
-  return dcg/max_dcg(len(top_n), 5.0)
+  return dcg(ratings)/max_dcg
