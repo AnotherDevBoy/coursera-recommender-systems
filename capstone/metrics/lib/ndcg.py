@@ -12,8 +12,6 @@ def dcg(ratings):
 
 
 def ndcg(user_id, top_n):
-  max_dcg = dcg(np.repeat(5.0, len(top_n)))
-
   ratings = []
 
   for recommendation in top_n.iterrows():
@@ -22,12 +20,4 @@ def ndcg(user_id, top_n):
     else:
       ratings.append(0.0)
 
-  '''
-  for rank in range(1, number_of_items+1):
-    recommendation = top_n.loc[rank-1]
-    if is_item_relevant_for_user(user_id, recommendation[1]['Item']):
-      prediction = recommendation[1][user_id]
-      dcg += prediction/np.log2(rank+1)
-  '''
-
-  return dcg(ratings)/max_dcg
+  return dcg(ratings)/dcg(np.repeat(5.0, len(top_n)))
