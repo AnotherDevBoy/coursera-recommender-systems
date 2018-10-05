@@ -24,7 +24,7 @@ def get_price_tag(price):
 def read_items_from_file():
   items = []
   items_df = pd.read_csv('data/items.csv')
-  items_df = items_df[['Item', 'Availability', 'Price', 'LeafCat', 'FullCat']]
+  items_df = items_df[['Item', 'Availability', 'Price', 'FullCat']]
 
   for item_r in items_df.iterrows():
     price_tag = get_price_tag(item_r[1]['Price'])
@@ -33,7 +33,7 @@ def read_items_from_file():
       'Availability': item_r[1]['Availability'],
       'Price': item_r[1]['Price'],
       'PriceTag': price_tag,
-      'LeafCat': item_r[1]['LeafCat']
+      'Category': item_r[1]['FullCat'].split("/")[2]
     })
 
   return items
@@ -48,10 +48,10 @@ def read_predictions_from_file(file):
   return pd.read_csv(predictions_path)
 
 
-def calculate_statistics(values):
+def calculate_statistics(values, algorithm):
   np_values = np.array(values)
 
-  return {
+  df = pd.DataFrame.from_dict([{
     'min': np_values.min(),
     'max': np_values.max(),
     'mean': np_values.mean(),
@@ -59,8 +59,13 @@ def calculate_statistics(values):
     '25': np.percentile(np_values, 25),
     '50': np.percentile(np_values, 50),
     '75': np.percentile(np_values, 75),
-    '95': np.percentile(np_values, 95),
-  }
+    '99': np.percentile(np_values, 99),
+    'std': np.std(np_values)
+  }])
+
+  df = df.rename(index={0: algorithm})
+
+  return df
 
 def generate_output_files(results, metricName):
   filename = './output/%s.csv' % (metricName)

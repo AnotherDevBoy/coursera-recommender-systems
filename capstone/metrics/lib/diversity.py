@@ -24,4 +24,4 @@ def intralist_price_diversity_for_user(top_n):
   return intralist_diversity_for_user(top_n, 'PriceTag')
 
 def intralist_category_diversity_for_user(top_n):
-  return intralist_diversity_for_user(top_n, 'LeafCat')
+  return intralist_diversity_for_user(top_n, 'Category')
