@@ -52,15 +52,15 @@ def calculate_statistics(values, algorithm):
   np_values = np.array(values)
 
   df = pd.DataFrame.from_dict([{
-    'min': np_values.min(),
-    'max': np_values.max(),
-    'mean': np_values.mean(),
-    '10': np.percentile(np_values, 10),
-    '25': np.percentile(np_values, 25),
-    '50': np.percentile(np_values, 50),
-    '75': np.percentile(np_values, 75),
-    '99': np.percentile(np_values, 99),
-    'std': np.std(np_values)
+    'min': np_values.min() if np_values.size > 0 else 0,
+    'max': np_values.max() if np_values.size > 0 else 0,
+    'mean': np_values.mean() if np_values.size > 0 else 0,
+    '10': np.percentile(np_values, 10) if np_values.size > 0 else 0,
+    '25': np.percentile(np_values, 25) if np_values.size > 0 else 0,
+    '50': np.percentile(np_values, 50) if np_values.size > 0 else 0,
+    '75': np.percentile(np_values, 75) if np_values.size > 0 else 0,
+    '99': np.percentile(np_values, 99) if np_values.size > 0 else 0,
+    'std': np.std(np_values) if np_values.size > 0 else 0
   }])
 
   df = df.rename(index={0: algorithm})

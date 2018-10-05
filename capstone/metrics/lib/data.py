@@ -65,6 +65,15 @@ def get_users():
   return users
 
 
+def get_cold_users():
+  cold_users = []
+
+  for user_id in users:
+    if len(ratings[user_id].dropna()) <= 10:
+      cold_users.append(user_id)
+
+  return cold_users
+
 def get_ratings(user_id):
   return ratings[['item', user_id]].dropna()
 
