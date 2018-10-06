@@ -118,21 +118,19 @@ def get_item_field_by_id(item_id, field):
 
 
 def is_item_relevant_for_user(user_id, item_id):
-  user_rating = _get_ratings_for_item(user_id, item_id)
+  user_rating = get_ratings_for_item(user_id, item_id)
 
   if not user_rating:
     return False
 
-  average_user_rating = _get_average_user_rating(user_id)
-
-  return user_rating >= average_user_rating
+  return user_rating > 3.0
 
 
 def is_item_popular(item_id):
   return items_popularity[item_id] >= 0.15
 
 
-def _get_ratings_for_item(user_id, item_id):
+def get_ratings_for_item(user_id, item_id):
   user_ratings = get_ratings(user_id)
 
   rating = user_ratings.loc[user_ratings['item'] == int(item_id)]

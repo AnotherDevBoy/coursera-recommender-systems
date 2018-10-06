@@ -1,12 +1,17 @@
 import numpy as np
-from data import is_item_relevant_for_user
+from data import get_ratings_for_item
 
 
 def dcg(ratings):
   dcg = 0.0
 
-  for rank in range(len(ratings)):
-    dcg += ratings[rank]/np.log2(rank+2)
+  for i in range(len(ratings)):
+    rank = i + 1
+
+    if rank <= 2:
+      dcg += ratings[i]
+    else:
+      dcg += ratings[i]/np.log2(i)
 
   return dcg
 
@@ -15,8 +20,10 @@ def ndcg(user_id, top_n):
   ratings = []
 
   for recommendation in top_n.iterrows():
-    if is_item_relevant_for_user(user_id, recommendation[1]['Item']):
-      ratings.append(recommendation[1][user_id])
+    rating = get_ratings_for_item(user_id, recommendation[1]['Item'])
+
+    if rating:
+      ratings.append(rating)
     else:
       ratings.append(0.0)
 
