@@ -1,21 +1,20 @@
 from data import get_relevant_items_for_user, get_top_n
 
 
-def precision(recommended_items, user_relevant_items):
-  recommended_relevant_items = list(
-      set(recommended_items['Item']) & set(user_relevant_items['item']))
-  return float(len(recommended_relevant_items)) / float(len(recommended_items['Item']))
+def average_precision_for_user(top_n, user_id):
+  average_precision = 0.0
 
-
-def mean_average_precision_for_user(top_n, user_id):
-  precision_for_user = 0.0
-  user_relevant_items = get_relevant_items_for_user(user_id)
+  top_n_items = list(top_n['Item'])
+  user_relevant_items = list(get_relevant_items_for_user(user_id)['item'])
 
   for i in range(len(top_n['Item'])):
-    recommended_at_k = get_top_n(user_id, i+1)
-    candidate_item = list(top_n['Item'])[i]
+    relevant_items_count = 0
+    rank = i + 1
+    if top_n_items[i] in user_relevant_items:
+      relevant_items_count += 1
+      average_precision += relevant_items_count/rank
 
-    if candidate_item in list(user_relevant_items['item']):
-      precision_for_user += precision(recommended_at_k, user_relevant_items)
+  if relevant_items_count > 0:
+    return average_precision/relevant_items_count
 
-  return precision_for_user / float(len(user_relevant_items))
+  return 0

@@ -3,3 +3,4 @@
 build
 *.iml
 *.pyc
+.ipynb_checkpoints
