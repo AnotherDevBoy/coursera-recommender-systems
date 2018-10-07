@@ -83,16 +83,20 @@ def get_predictions(user_id):
 def get_top_n(user_id, n):
   return top_n_by_user[user_id].head(n=n).reset_index(drop=True)
 
+# BUG
+# This approach still has the risk of leaving the number of relevant items in top N untouched if the last
+# min_relevant_items of the top N were relevant to start with (i.e needs 2 relevant items, adds 1 but pushes out 1 relevant item)
 def rerank_top_n(user_id, top_n, min_relevant_items):
   relevant_items = get_relevant_items_for_user(user_id)
   recommended_relevant_items = set(top_n['Item']) & set(relevant_items['Item'])
 
   new_top_n = pd.DataFrame()
 
-  if len(recommended_relevant_items) < min_relevant_items:
-    items_to_add = min_relevant_items - len(recommended_relevant_items)
-    new_top_n = pd.concat([new_top_n, relevant_items.head(n=items_to_add)]).reset_index(drop=True)
+  not_recommended_relevant_items = relevant_items.loc[~relevant_items['Item'].isin(recommended_relevant_items)]
 
+  items_to_add = min_relevant_items - len(recommended_relevant_items)
+
+  new_top_n = pd.concat([new_top_n, not_recommended_relevant_items.head(n=items_to_add)]).reset_index(drop=True)
   new_top_n = pd.concat([new_top_n, top_n]).reset_index(drop=True)
   new_top_n = new_top_n.drop_duplicates(subset='Item')
 
