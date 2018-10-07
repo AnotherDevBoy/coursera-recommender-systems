@@ -1,7 +1,7 @@
 import numpy as np
 import pandas as pd
 
-from lib.data import generate_top_n_for_all_users, get_ratings, get_predictions, get_top_n, get_relevant_items_for_user, set_items, get_users, set_ratings, set_predictions
+from lib.data import generate_top_n_for_all_users, get_ratings, get_predictions, get_top_n, rerank_top_n, get_relevant_items_for_user, set_items, get_users, set_ratings, set_predictions
 
 # Metric Imports
 from lib.availability import availability_for_user
@@ -25,4 +25,4 @@ users = get_users()
 generate_top_n_for_all_users(users)
 
 top_n = get_top_n('804', 5)
-print average_precision_for_user(top_n, '804')
+rerank_top_n('804', top_n, 1)

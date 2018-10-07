@@ -83,6 +83,16 @@ def get_predictions(user_id):
 def get_top_n(user_id, n):
   return top_n_by_user[user_id].head(n=n)
 
+def rerank_top_n(user_id, top_n, min_relevant_items):
+  relevant_items = get_relevant_items_for_user(user_id)
+  recommended_relevant_items = set(top_n['Item']) & set(relevant_items['item'])
+
+  print recommended_relevant_items
+
+  if len(recommended_relevant_items) < min_relevant_items:
+    print 'TODO: Add more relevant items at the beginning of the list'
+
+  return top_n
 
 def get_relevant_items_for_user(user_id):
   user_ratings = get_ratings(user_id)
