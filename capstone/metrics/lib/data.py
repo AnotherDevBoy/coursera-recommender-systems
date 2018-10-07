@@ -7,9 +7,8 @@ users = set()
 ratings = None
 predictions = None
 top_n_by_user = {}
-items_popularity = {}
-ratings_distribution = {}
 cold_users = []
+popular_items = []
 
 #########################################################################
 # Generators
@@ -33,38 +32,29 @@ def generate_top_n_for_all_users(users):
 def set_predictions(predictions_arg):
   global predictions
   global users
-  global ratings_distribution
-  global cold_users
   predictions = predictions_arg
   users = users | set(predictions.columns[1:])
 
 def set_ratings(ratings_arg, cold_max_number_of_ratings=10):
   global ratings
-  global items_popularity
+  global popular_items
+  global cold_users
+
   ratings = ratings_arg
 
   users_that_rated = list(ratings)[1:]
   for _, rating in ratings.iterrows():
-    item = rating['item']
     ratings_for_item = 0
     for user in users_that_rated:
       if not np.isnan(rating[user]):
         ratings_for_item += 1
 
-    popularity = float(ratings_for_item)/float(len(users_that_rated))
-    items_popularity[item] = popularity
+  ratings_distribution = dict(ratings.count()[1:])
+  cold_users = {user_id: count for user_id, count in ratings_distribution.iteritems() if count <= cold_max_number_of_ratings}.keys()
 
-  for user_id in users_that_rated:
-    ratings_count = len(ratings[user_id].dropna())
-
-    if ratings_count in ratings_distribution:
-      ratings_distribution[ratings_count] += 1
-    else:
-      ratings_distribution[ratings_count] = 1
-
-    if ratings_count <= cold_max_number_of_ratings:
-      cold_users.append(user_id)
-
+  for key, value in ratings_distribution.items():
+    if value > 15:
+        popular_items.append(key)
 
 def set_items(items_arg):
   global items
@@ -81,10 +71,6 @@ def get_users():
 
 def get_cold_users():
   return cold_users
-
-
-def get_ratings_distribution():
-  return ratings_distribution
 
 def get_ratings(user_id):
   return ratings[['item', user_id]].dropna()
@@ -123,11 +109,12 @@ def is_item_relevant_for_user(user_id, item_id):
   if not user_rating:
     return False
 
-  return user_rating > 3.0
+  return user_rating >= _get_average_user_rating(user_id)
 
 
 def is_item_popular(item_id):
-  return items_popularity[item_id] >= 0.15
+  global popular_items
+  return item_id in popular_items
 
 
 def get_ratings_for_item(user_id, item_id):

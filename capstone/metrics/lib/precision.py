@@ -12,8 +12,8 @@ def _recall(top_n, user_id):
   total_relevant_items = len(user_relevant_items)
   if total_relevant_items > 0:
     return float(len(recommended_and_relevant))/float(total_relevant_items)
-  else:
-    return 0.0
+
+  return 0.0
 
 
 def _precision(top_n, user_id):
@@ -25,8 +25,8 @@ def _precision(top_n, user_id):
   total_recommended = len(top_n_items)
   if total_recommended > 0:
     return float(len(recommended_and_relevant))/float(total_recommended)
-  else:
-    return 0.0
+
+  return 0.0
 
 def f1_score(top_n, user_id):
   precision = _precision(top_n, user_id)
@@ -34,8 +34,8 @@ def f1_score(top_n, user_id):
 
   if precision+recall > 0:
     return 2.0*(precision*recall)/(precision+recall)
-  else:
-    return 0.0
+
+  return 0.0
 
 def average_precision_for_user(top_n, user_id):
   average_precision = 0.0

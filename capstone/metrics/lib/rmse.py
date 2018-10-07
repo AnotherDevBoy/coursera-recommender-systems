@@ -18,4 +18,4 @@ def rmse_for_user(user_id, user_ratings, user_predictions):
     return sqrt(mean_squared_error(good_values, predicted_values))
 
   # If the user has not rated any of the predicted items, then RMSE is technically 0
-  return 0
+  return 0.0

@@ -27,4 +27,9 @@ def ndcg(user_id, top_n):
     else:
       ratings.append(0.0)
 
-  return dcg(ratings)/dcg(np.repeat(5.0, len(top_n)))
+  max_ndcg = dcg(np.repeat(5.0, len(top_n)))
+
+  if max_ndcg > 0:
+    return dcg(ratings)/max_ndcg
+
+  return 0.0

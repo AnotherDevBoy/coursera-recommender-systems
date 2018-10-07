@@ -10,4 +10,7 @@ def serendipity_for_user(top_n, user_id):
     if is_item_relevant_for_user(user_id, item_id) and not is_item_popular(item_id):
       top_n_serendipity += 1.0
 
-  return top_n_serendipity/float(len(top_n_items))
+  if len(top_n_items) > 0:
+    return top_n_serendipity/float(len(top_n_items))
+
+  return 0.0

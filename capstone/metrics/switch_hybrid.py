@@ -14,7 +14,7 @@ def find_cold_start_users(users_with_ratings, max_rating):
 ratings_df = pd.read_csv('data/ratings.csv')
 uu_scores_df = pd.read_csv('data/user-user.csv')
 
-ALGORITHMS = ['cbf', 'mf']
+ALGORITHMS = ['cbf', 'mf', 'perbias', 'item-item']
 MAX_RATINGS = [10, 11]
 
 users_with_ratings = ratings_df.columns[1:]
