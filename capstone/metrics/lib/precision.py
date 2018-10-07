@@ -5,7 +5,7 @@ from data import get_relevant_items_for_user, get_top_n
 
 def _recall(top_n, user_id):
   top_n_items = set(top_n['Item'])
-  user_relevant_items = set(get_relevant_items_for_user(user_id)['item'])
+  user_relevant_items = set(get_relevant_items_for_user(user_id)['Item'])
 
   recommended_and_relevant = top_n_items & user_relevant_items
 
@@ -18,7 +18,7 @@ def _recall(top_n, user_id):
 
 def _precision(top_n, user_id):
   top_n_items = set(top_n['Item'])
-  user_relevant_items = set(get_relevant_items_for_user(user_id)['item'])
+  user_relevant_items = set(get_relevant_items_for_user(user_id)['Item'])
 
   recommended_and_relevant = top_n_items & user_relevant_items
 
@@ -41,7 +41,7 @@ def average_precision_for_user(top_n, user_id):
   average_precision = 0.0
 
   top_n_items = list(top_n['Item'])
-  user_relevant_items = list(get_relevant_items_for_user(user_id)['item'])
+  user_relevant_items = list(get_relevant_items_for_user(user_id)['Item'])
 
   relevant_items_count = 0
   for i in range(len(top_n['Item'])):

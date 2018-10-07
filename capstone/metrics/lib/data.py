@@ -19,9 +19,8 @@ def generate_top_n_for_all_users(users):
   for user_id in users:
     predictions_for_user = predictions[['Item', user_id]]
 
-    predictions_for_user = predictions_for_user.sort_values(
-        by=[user_id], ascending=False)
-    top_n_by_user[user_id] = predictions_for_user
+    sorted_predictions = predictions_for_user.sort_values(by=[user_id], ascending=False)
+    top_n_by_user[user_id] = sorted_predictions
 
 
 #########################################################################
@@ -41,6 +40,7 @@ def set_ratings(ratings_arg, cold_max_number_of_ratings=10):
   global cold_users
 
   ratings = ratings_arg
+  ratings.rename(columns={'item': 'Item'}, inplace=True)
 
   users_that_rated = list(ratings)[1:]
   for _, rating in ratings.iterrows():
@@ -73,7 +73,7 @@ def get_cold_users():
   return cold_users
 
 def get_ratings(user_id):
-  return ratings[['item', user_id]].dropna()
+  return ratings[['Item', user_id]].dropna()
 
 
 def get_predictions(user_id):
@@ -81,23 +81,29 @@ def get_predictions(user_id):
 
 
 def get_top_n(user_id, n):
-  return top_n_by_user[user_id].head(n=n)
+  return top_n_by_user[user_id].head(n=n).reset_index(drop=True)
 
 def rerank_top_n(user_id, top_n, min_relevant_items):
   relevant_items = get_relevant_items_for_user(user_id)
-  recommended_relevant_items = set(top_n['Item']) & set(relevant_items['item'])
+  recommended_relevant_items = set(top_n['Item']) & set(relevant_items['Item'])
 
-  print recommended_relevant_items
+  new_top_n = pd.DataFrame()
 
   if len(recommended_relevant_items) < min_relevant_items:
-    print 'TODO: Add more relevant items at the beginning of the list'
+    items_to_add = min_relevant_items - len(recommended_relevant_items)
+    new_top_n = pd.concat([new_top_n, relevant_items.head(n=items_to_add)]).reset_index(drop=True)
 
-  return top_n
+  new_top_n = pd.concat([new_top_n, top_n]).reset_index(drop=True)
+  new_top_n = new_top_n.drop_duplicates(subset='Item')
+
+  return new_top_n.head(n=len(top_n)).reset_index(drop=True)
 
 def get_relevant_items_for_user(user_id):
   user_ratings = get_ratings(user_id)
   average_rating = _get_average_user_rating(user_id)
-  return user_ratings[user_ratings[user_id] >= average_rating]
+  relevant_items = user_ratings[user_ratings[user_id] >= average_rating].reset_index(drop=True)
+  sorted_relevant_items = relevant_items.sort_values(by=[user_id], ascending=False)
+  return sorted_relevant_items
 
 
 def get_item_field_by_id(item_id, field):
@@ -130,7 +136,7 @@ def is_item_popular(item_id):
 def get_ratings_for_item(user_id, item_id):
   user_ratings = get_ratings(user_id)
 
-  rating = user_ratings.loc[user_ratings['item'] == int(item_id)]
+  rating = user_ratings.loc[user_ratings['Item'] == int(item_id)]
 
   if rating.empty:
     return None
