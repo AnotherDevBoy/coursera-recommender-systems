@@ -25,5 +25,4 @@ users = get_users()
 generate_top_n_for_all_users(users)
 
 top_n = get_top_n('804', 5)
-print top_n
-print rerank_top_n('804', top_n, 3)
+rerank_top_n('804', top_n, 3)

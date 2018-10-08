@@ -30,27 +30,29 @@ def generate_top_n_for_all_users(users):
 
 def set_predictions(predictions_arg):
   global predictions
-  global users
   predictions = predictions_arg
-  users = users | set(predictions.columns[1:])
 
-def set_ratings(ratings_arg, cold_max_number_of_ratings=10):
+def set_ratings(ratings_arg, min_number_of_ratings=None, max_number_of_ratings=None):
   global ratings
   global popular_items
-  global cold_users
+  global users
 
   ratings = ratings_arg
   ratings.rename(columns={'item': 'Item'}, inplace=True)
 
-  users_that_rated = list(ratings)[1:]
-  for _, rating in ratings.iterrows():
-    ratings_for_item = 0
-    for user in users_that_rated:
-      if not np.isnan(rating[user]):
-        ratings_for_item += 1
-
   ratings_distribution = dict(ratings.count()[1:])
-  cold_users = {user_id: count for user_id, count in ratings_distribution.iteritems() if count <= cold_max_number_of_ratings}.keys()
+
+  users = set(ratings.columns[1:])
+
+  # TODO: check how to do this in Python
+  if not min_number_of_ratings is None and max_number_of_ratings is None:
+    users = { user_id: count for user_id, count in ratings_distribution.iteritems() if count >= min_number_of_ratings and count <= max_number_of_ratings }.keys()
+  elif not min_number_of_ratings is None:
+    users = { user_id: count for user_id, count in ratings_distribution.iteritems() if count >= min_number_of_ratings }.keys()
+  else:
+    users = { user_id: count for user_id, count in ratings_distribution.iteritems() if count <= max_number_of_ratings }.keys()
+
+  print users
 
   for key, value in ratings_distribution.items():
     if value > 15:
@@ -83,9 +85,7 @@ def get_predictions(user_id):
 def get_top_n(user_id, n):
   return top_n_by_user[user_id].head(n=n).reset_index(drop=True)
 
-# BUG
-# This approach still has the risk of leaving the number of relevant items in top N untouched if the last
-# min_relevant_items of the top N were relevant to start with (i.e needs 2 relevant items, adds 1 but pushes out 1 relevant item)
+
 def rerank_top_n(user_id, top_n, min_relevant_items):
   relevant_items = get_relevant_items_for_user(user_id)
   recommended_relevant_items = set(top_n['Item']) & set(relevant_items['Item'])
@@ -95,6 +95,12 @@ def rerank_top_n(user_id, top_n, min_relevant_items):
   not_recommended_relevant_items = relevant_items.loc[~relevant_items['Item'].isin(recommended_relevant_items)]
 
   items_to_add = min_relevant_items - len(recommended_relevant_items)
+
+  # Accounting for those relevant items that might get pushed out
+  # TODO: transform into functional style: filter + count
+  for item in set(top_n.tail(n=items_to_add)['Item']):
+    if item in set(relevant_items['Item']):
+      items_to_add += 1
 
   new_top_n = pd.concat([new_top_n, not_recommended_relevant_items.head(n=items_to_add)]).reset_index(drop=True)
   new_top_n = pd.concat([new_top_n, top_n]).reset_index(drop=True)
