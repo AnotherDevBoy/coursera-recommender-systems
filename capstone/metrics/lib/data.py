@@ -45,14 +45,12 @@ def set_ratings(ratings_arg, min_number_of_ratings=None, max_number_of_ratings=N
   users = set(ratings.columns[1:])
 
   # TODO: check how to do this in Python
-  if not min_number_of_ratings is None and max_number_of_ratings is None:
+  if (min_number_of_ratings is not None) and (max_number_of_ratings is not None):
     users = { user_id: count for user_id, count in ratings_distribution.iteritems() if count >= min_number_of_ratings and count <= max_number_of_ratings }.keys()
-  elif not min_number_of_ratings is None:
+  elif min_number_of_ratings is not None:
     users = { user_id: count for user_id, count in ratings_distribution.iteritems() if count >= min_number_of_ratings }.keys()
-  else:
+  elif max_number_of_ratings is not None:
     users = { user_id: count for user_id, count in ratings_distribution.iteritems() if count <= max_number_of_ratings }.keys()
-
-  print users
 
   for key, value in ratings_distribution.items():
     if value > 15:

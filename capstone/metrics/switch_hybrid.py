@@ -1,6 +1,6 @@
 import pandas as pd
 
-def find_cold_start_users(users_with_ratings, max_rating):
+def find_users_to_switch(users_with_ratings, max_rating):
   cold_start_users = []
 
   for user_id in users_with_ratings:
@@ -12,20 +12,22 @@ def find_cold_start_users(users_with_ratings, max_rating):
   return cold_start_users
 
 ratings_df = pd.read_csv('data/ratings.csv')
-uu_scores_df = pd.read_csv('data/user-user.csv')
 
-ALGORITHMS = ['cbf', 'mf', 'perbias', 'item-item']
-MAX_RATINGS = [10, 11]
+ALGORITHMS = ['cbf', 'mf', 'item-item']
+MAX_RATINGS = [10, 20, 30]
 
 users_with_ratings = ratings_df.columns[1:]
 
-for algorithm in ALGORITHMS:
-  for max_rating in MAX_RATINGS:
-    cold_start_users = find_cold_start_users(users_with_ratings, max_rating)
+for algorithm_1 in ALGORITHMS:
+  algorithm_1_scores_df = pd.read_csv('data/%s.csv' % algorithm_1)
+  for algorithm_2 in ALGORITHMS:
+    if algorithm_1 != algorithm_2:
+      for max_rating in MAX_RATINGS:
+        users_to_switch = find_users_to_switch(users_with_ratings, max_rating)
 
-    alternative_scores_df = pd.read_csv('data/%s.csv' % (algorithm))
-    cold_start_cbf_scores_df = alternative_scores_df[['Item'] + cold_start_users]
+        algorithm_2_scores_df = pd.read_csv('data/%s.csv' % algorithm_2)
+        filtered_algorithm_2_scores_df = algorithm_2_scores_df[['Item'] + users_to_switch]
 
-    uu_scores_df.update(cold_start_cbf_scores_df)
+        algorithm_1_scores_df.update(filtered_algorithm_2_scores_df)
 
-    uu_scores_df.to_csv('data/switch_%s_%s.csv' % (algorithm, max_rating), encoding='utf-8', index=False)
+        algorithm_1_scores_df.to_csv('data/switch_%s_%s_%s.csv' % (algorithm_2, max_rating, algorithm_1), encoding='utf-8', index=False)
